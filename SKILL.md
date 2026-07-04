@@ -37,8 +37,16 @@ Resolve the input in **Step 0**:
    Optionally `Read` it to tailor the "keep recognizable" clause.
 
 2. **Get a URL fal can fetch (`$IMG_URL`).** *(Skip for direct-URL passthrough.)*
-   - **Upload to fal's CDN (portable):** `mcp__fal-ai__upload_file` with `/tmp/_dippen_src.jpg` as base64 `data` → use the returned `url`.
-   - **Your own web server:** copy the file into its docroot and use that public URL, e.g. `cp /tmp/_dippen_src.jpg /var/www/<your-site>/_dippen_src.jpg` → `https://<your-site>/_dippen_src.jpg`.
+   - **Upload to fal's CDN via REST (reliable default):** don't pass the image as base64 `data` through `mcp__fal-ai__upload_file` — a ~1024px JPEG encodes to ~190K base64 chars, which overflows a tool call and gets truncated. Use fal's REST upload with the same key the fal MCP server is configured with:
+     ```bash
+     resp=$(curl -s -X POST "https://rest.alpha.fal.ai/storage/upload/initiate" \
+       -H "Authorization: Key $FAL_KEY" -H "Content-Type: application/json" \
+       -d '{"file_name":"_dippen_src.jpg","content_type":"image/jpeg"}')
+     upload_url=$(echo "$resp" | python3 -c "import sys,json;print(json.load(sys.stdin)['upload_url'])")
+     IMG_URL=$(echo "$resp" | python3 -c "import sys,json;print(json.load(sys.stdin)['file_url'])")
+     curl -s -o /dev/null -w '%{http_code}' -X PUT "$upload_url" -H "Content-Type: image/jpeg" --data-binary @/tmp/_dippen_src.jpg   # expect 200
+     ```
+   - **Your own web server:** copy the file into its docroot and use that public URL, e.g. `cp /tmp/_dippen_src.jpg /var/www/<your-site>/_dippen_src.jpg` → `https://<your-site>/_dippen_src.jpg` (delete it after the run).
 
 3. **Run the edit** with `mcp__fal-ai__run_model`:
    - `endpoint_id`: `fal-ai/nano-banana-2/edit`
@@ -50,6 +58,12 @@ Resolve the input in **Step 0**:
 4. **Download the result** (clean up the uploaded/staged source if you used your own server):
    ```bash
    curl -s -o /tmp/<name>_dippen_outline.jpg "<RESULT_URL>" && identify /tmp/<name>_dippen_outline.jpg
+   ```
+   Then normalize the paper to pure white — generations come back on slightly different paper tones, and this makes every run deliver the same blank-white background (the corner-sampled flood only touches near-paper pixels, so the ink is safe):
+   ```bash
+   cd /tmp && f=<name>_dippen_outline.jpg
+   bg=$(convert "$f" -format '%[pixel:p{3,3}]' info:)
+   convert "$f" -fuzz 12% -fill white -opaque "$bg" "$f"
    ```
 
 5. **`Read` the result**, report the saved path, offer tweaks (tighter crop, rougher/denser hatching, 4K).
