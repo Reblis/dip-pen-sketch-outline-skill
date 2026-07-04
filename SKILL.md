@@ -63,4 +63,4 @@ Resolve the input in **Step 0**:
 - The differentiator from the color skill: **no marker, monochrome only.** If any color sneaks in, re-run stressing "pure black ink, no color, black and white only."
 - If output is too clean, re-run emphasizing "rougher, scratchier, wobbly, incomplete lines."
 - Always adapt the "keep recognizable" clause to the actual photo for best likeness.
-- **Want both an outline AND a matching color version with identical lines?** Use **dip-pen-sketch-combo**, which colors *on top of* this outline so the linework matches stroke-for-stroke and normalizes both backgrounds (two separate output images).
+- **Want both an outline AND a matching color version with identical lines?** Use **dip-pen-sketch-combo**, which generates the colored sketch and *derives* the outline from it — the only method that keeps the linework identical stroke-for-stroke — and normalizes both backgrounds to the same paper color (two separate output images).
