@@ -65,8 +65,14 @@ Resolve the input in **Step 0**:
    bg=$(convert "$f" -format '%[pixel:p{3,3}]' info:)
    convert "$f" -fuzz 12% -fill white -opaque "$bg" "$f"
    ```
+   ⚠️ If the sampled corner pixel isn't near-white (artwork reaches that corner), sample a pixel that IS blank paper instead (e.g. top-center) — flooding from a dark sample eats the ink.
+   Then shave the paper-edge slivers: the model renders a *photo of a paper sheet*, and dark sheet-edge curls / desk slivers often hug the frame borders (they survive the whiten because they're dark, not paper-toned):
+   ```bash
+   convert "$f" -shave 45x45 "$f"
+   ```
+   Crop-inspect the corners to confirm they're clean; shave more if a curl survives.
 
-5. **`Read` the result**, report the saved path, offer tweaks (tighter crop, rougher/denser hatching, 4K).
+5. **Deliver to the sketches folder** — finals never stay in `/tmp`; `/tmp` is for intermediates only. Default folder `/root/projects/dip-pen-sketches/sketches/` (create it if missing, adapt per install): `cp /tmp/$f /root/projects/dip-pen-sketches/sketches/`. **`Read` the result**, report the sketches-folder path, offer tweaks (tighter crop, rougher/denser hatching, 4K).
 
 ## Locked prompt (outline / no color)
 
